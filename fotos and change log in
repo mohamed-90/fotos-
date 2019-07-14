@@ -1,0 +1,168 @@
+********************* fotos change password ************************
+   public function upload(Request $request) {
+        $id_client = Auth::user()->id;
+        $Dactor = \App\Dactor::where('id_user', '=', $id_client)->first();
+        $img = $Dactor->photo_profile;
+        $path = public_path() . '/images/' . $id_client;
+        $path_2 = public_path() . '/images/' . $id_client . '/' . $img;
+
+        if (!File::exists($path)) {
+            File::makeDirectory($path);
+        } else {
+            if ((File::exists($path_2))) {
+                File::delete($path_2);
+            }
+        }
+
+        if ($request->hasFile('file')) {
+
+            $image = $request->file('file');
+            $fileExtension = $image->getClientOriginalExtension();
+            $filename = 1 . '.' . $fileExtension;
+            $pathImage = $path;
+            $image->move($pathImage, $filename);
+            $photo_default = $filename;
+        }
+
+        $Dactor->photo_profile = $photo_default;
+        $Dactor->save();
+
+        return back()->with('success', 'Image Uploaded Successfully');
+    }
+**********************************************************************
+  public function editLogin(Request $request) {
+        if (Auth::user()) {
+//            $oldEmail = $request->oldEmail;
+//            $newEmail_1 = $request->newEmail_1;
+            $id_user = Auth::user()->id;
+
+            $oldEmail = $request->old_email;
+            $newEmail_1 = $request->new_email;
+            $user_email = Auth::user()->email;
+
+            if ($user_email === $oldEmail) {
+                $user = \App\User::where('email', '=', $user_email)->first();
+                $user->email = $newEmail_1;
+                $user->save();
+
+                $dactor = \App\Dactor::where('id_user', '=', $id_user)->first();
+                if ($dactor) {
+                    $dactor->email = $newEmail_1;
+                    $dactor->save();
+                }
+
+
+                return back()->with('success', 'Email bien modifer');
+            } else {
+                return back()->with('error', 'Email non trouvé');
+            }
+        } else {
+            return back()->with('error', 'Error connexion');
+        }
+    }
+*********************************************************************
+use File;
+use DirectoryIterator;
+use Auth;
+use Validator;
+use Hash;
+use App\User;
+use Illuminate\Http\Request;
+*********************************************************************
+
+<div style="">
+    <link href="{{asset('assets/js_med/bootstrap-fileupload.min.css')}}" rel="stylesheet" />
+    <style>
+        .container{
+            margin-top:20px;
+            width:100%
+        }
+        .image-preview-input {
+            position: relative;
+            overflow: hidden;
+            margin: 0px;    
+            color: #333;
+            background-color: #fff;
+            border-color: #ccc;    
+        }
+        .image-preview-input input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+        .image-preview-input-title {
+            margin-left:2px;
+        }
+    </style>
+    <div  class="container">
+        <form method="post" action="{{url('/addPhoto')}}" enctype="multipart/form-data">
+            {{ csrf_field() }}
+            <table>
+                <tr>
+                    <td >
+                        <div class="panel panel-default" style='' id="img_1">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="">
+                                        <div class="fileupload fileupload-new" data-provides="fileupload" style="width: 210px;">
+                                            <div class="fileupload-preview thumbnail" id="div_tr" style="width: 200px; height: 150px; display: none"></div>
+                                            <div class="" style="width: 200px; height: 150px;" id="div_fl">
+<!--                                                <img src="{{asset('assets/img/used/Medical.png')}}" width="200" height="150" alt="">-->
+
+                                                @if(!$dactor->photo_profile == '')
+                                                <img src="{{asset('images/' . $dactor->id_user . '/' . $dactor->photo_profile)}}" width="200" height="150" alt="">
+                                                @else
+                                                <img src="{{asset('assets/img/used/Medical.png')}}" width="200" height="150" alt="">
+                                                @endif
+                                            </div>
+                                            <div style=" text-align: center">
+                                                <span class="btn btn-file btn-success">
+                                                    <span class="fileupload-new" >Select image</span>
+                                                    <span class="fileupload-exists">Change</span>
+                                                    <input id="btn_1" onclick="addImage()" type="file" name="file">
+                                                </span>
+                                                <a href="#" onclick="deleteImage()" class="btn btn-danger fileupload-exists" data-dismiss="fileupload">Remove</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <button type="submit" id="up_file"  class="btn_1" style="display: none">Upload Photo</button>
+                    </td>
+                </tr>           
+            </table>       
+        </form>
+        <script>
+            function addImage()
+            {
+                var div_1 = document.getElementById("div_fl");
+                var div_2 = document.getElementById("div_tr");
+                var btn_1 = document.getElementById("up_file");
+
+                div_1.style.display = "none";
+                div_2.style.display = "block";
+                btn_1.style.display = "block";
+            }
+
+            function deleteImage()
+            {
+                var btn_1 = document.getElementById("up_file");
+                btn_1.style.display = "none";
+            }
+        </script>
+        <hr>
+        <br />
+
+        <script src="{{asset('assets/js_med/bootstrap-fileupload.js')}}"></script>
+
+    </div>
+</div>
